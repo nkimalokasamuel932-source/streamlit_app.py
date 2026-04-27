@@ -2,109 +2,163 @@ import streamlit as st
 import pandas as pd
 import random
 
-# 1. CONFIGURATION DE LA PAGE
-st.set_page_config(page_title="Loto-Euro Fusion Pro", page_icon="🧬", layout="wide")
+# ==========================================
+# 1. CONFIGURATION DE L'APPLICATION
+# ==========================================
+st.set_page_config(
+    page_title="Loto-Euro Fusion Pro V2.1", 
+    page_icon="🧬", 
+    layout="wide"
+)
 
-# TITRE MODIFIÉ POUR VÉRIFIER LA MISE À JOUR
-st.title("🧬 Intelligence Croisée V2.0")
-st.write("Analyse stratégique basée sur le tirage du **Samedi 25 Avril 2026**")
+# Style CSS pour améliorer le visuel
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f5f7f9;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 10px;
+        height: 3em;
+        background-color: #FF4B4B;
+        color: white;
+        font-weight: bold;
+    }
+    .result-box {
+        padding: 20px;
+        border-radius: 15px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- 2. DONNÉES ET STATISTIQUES (TES DONNÉES) ---
-# Données basées sur ton succès du 25/04 (4/5 numéros trouvés)
-numeros_loto_chauds = [17, 22, 23, 25, 49, 16, 30, 2, 33, 9, 10, 13]
-numeros_euro_chauds = [44, 42, 23, 13, 17, 10, 49, 19, 29, 37, 50, 25]
+# TITRE DYNAMIQUE
+st.title("🧬 Intelligence Croisée V2.1 (Expert)")
+st.subheader("Analyse Prédictive : Euromillions du Mardi 28 Avril")
+st.write("Dernière mise à jour : Lundi 27 Avril à 23h30 (Post-tirage Loto)")
 
-# Calcul de la convergence (les numéros présents dans les deux jeux)
-convergence = list(set(numeros_loto_chauds) & set(numeros_euro_chauds))
+# ==========================================
+# 2. BASE DE DONNÉES STATISTIQUES (MISES À JOUR)
+# ==========================================
 
-# --- 3. FONCTION DE GÉNÉRATION EXPERT ---
+# Numéros chauds basés sur les sorties de Samedi (17,22,23,25,49) 
+# et de Lundi (6,15,23,27,43)
+numeros_loto_recents = [6, 15, 23, 27, 43, 17, 22, 25, 49]
+
+# Top stats Euromillions (Forme + Réussite)
+# 13 (Forme 15), 44 (Réussite 222), 42 (Écart 16), 23 (Pivot)
+stats_euro = {
+    '13': {'reussite': 202, 'forme': 15, 'ecart': 1},
+    '44': {'reussite': 222, 'forme': 12, 'ecart': 3},
+    '42': {'reussite': 219, 'forme': 10, 'ecart': 16},
+    '23': {'reussite': 218, 'forme': 4, 'ecart': 2},
+    '10': {'reussite': 211, 'forme': 11, 'ecart': 4},
+    '49': {'reussite': 195, 'forme': 4, 'ecart': 5}
+}
+
+# Calcul de la convergence (Numéros présents dans la dynamique Loto et Euro)
+euro_cibles = [13, 23, 44, 42, 10, 49, 17, 27]
+convergence = list(set(numeros_loto_recents) & set(euro_cibles))
+
+# ==========================================
+# 3. LOGIQUE DE L'ALGORITHME "ENTONNOIR"
+# ==========================================
+
 def generer_ticket_expert():
-    # Piliers (Ceux qui sortent le plus)
-    noyau = [13, 44] 
-    # Transfert (Ceux qui sont sortis samedi au Loto)
-    transfert = [23, 49, 17]
-    # Retard et Forme
-    surprises = [42, 10, 16, 22]
+    # BASES FIXES : Le 23 (Pivot Loto) et le 13 (Forme Euro)
+    bases = [13, 23]
     
-    ticket = set()
-    ticket.add(13) # On force le pilier
-    ticket.add(23) # On force le pivot (sorti samedi)
+    # ÉCARTS ET DYNAMIQUE : 42 (Écart synchro) et 44 (Record)
+    piliers = [42, 44, 10]
     
-    # On complète le ticket jusqu'à 5 numéros
-    candidats = [n for n in (transfert + surprises + noyau) if n not in ticket]
+    # SOUTIEN : Transfert du Loto (17, 27, 49)
+    soutien = [17, 27, 49, 6, 15]
+    
+    ticket = set(bases)
+    
+    # Mélange des candidats restants
+    candidats = [n for n in (piliers + soutien) if n not in ticket]
+    random.shuffle(candidats)
+    
     while len(ticket) < 5:
-        ticket.add(random.choice(candidats))
+        ticket.add(candidats.pop())
         
     return sorted(list(ticket))
 
-# --- 4. INTERFACE À TROIS ONGLETS ---
-tab1, tab2, tab3 = st.tabs(["🏆 PRONOSTIC EXPERT", "🚀 CONVERGENCE", "🔄 ANALYSE MIROIR"])
+# ==========================================
+# 4. INTERFACE UTILISATEUR (ONGLETS)
+# ==========================================
 
+tab1, tab2, tab3 = st.tabs(["🏆 PRONOSTIC EXPERT", "📊 ANALYSE DATA", "🔄 FLUX MIROIR"])
+
+# --- ONGLET 1 : GÉNÉRATEUR ---
 with tab1:
-    st.header("🎯 Ta Sélection pour Mardi")
-    st.info("Cette sélection utilise l'algorithme 'Entonnoir' : Piliers + Forme Loto + Équilibre.")
+    st.header("🎯 Générateur de Grilles Stratégiques")
+    st.markdown("---")
     
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1, 1])
+    
     with col1:
+        st.write("### Cliquez pour générer")
         if st.button("🔥 GÉNÉRER MON TICKET PRIORITAIRE"):
             grille = generer_ticket_expert()
-            # Sélection des étoiles les plus probables
-            etoiles = sorted(random.sample([2, 8, 3, 10, 11], 2))
+            # Sélection des étoiles (Focus sur 2, 8, 4 et 10)
+            etoiles = sorted(random.sample([2, 4, 8, 10, 11], 2))
             
-            # AFFICHAGE DU RÉSULTAT
-            st.success(f"### NUMÉROS : {', '.join(map(str, grille))}")
-            st.warning(f"### ÉTOILES : {etoiles[0]} — {etoiles[1]}")
+            st.success(f"## {grille[0]} — {grille[1]} — {grille[2]} — {grille[3]} — {grille[4]}")
+            st.warning(f"## ⭐ Étoiles : {etoiles[0]} — {etoiles[1]}")
             
-            # --- ANALYSE DE L'ÉQUILIBRE PAIR/IMPAIR ---
+            # Analyse de l'équilibre
             nb_pairs = len([n for n in grille if n % 2 == 0])
             nb_impairs = 5 - nb_pairs
             
-            st.divider()
-            st.write(f"⚖️ **Analyse de l'Équilibre :**")
-            st.write(f"Cette grille contient **{nb_pairs} Pairs** et **{nb_impairs} Impairs**.")
-            
-            if nb_pairs == 2 or nb_pairs == 3:
-                st.info("✅ **ÉQUILIBRE OPTIMAL :** Cette configuration est statistiquement la plus fréquente.")
-            elif nb_pairs == 0 or nb_pairs == 5:
-                st.error("⚠️ **ALERTE :** Grille très déséquilibrée. Relance le bouton pour un meilleur mix.")
+            st.info(f"⚖️ **Équilibre :** {nb_pairs} Pairs / {nb_impairs} Impairs")
+            if nb_pairs in [2, 3]:
+                st.write("✅ **Configuration Optimale**")
             else:
-                st.write("💡 **INFO :** Équilibre correct, mais moins fréquent que le 2/3.")
-            
+                st.write("💡 *Note : Configuration atypique*")
             st.balloons()
             
     with col2:
-        st.write("### 📝 Rappel Stratégique")
+        st.write("### 🔍 Pourquoi ces numéros ?")
         st.markdown(f"""
-        - **Numéro Pivot :** 23 (En pleine forme)
-        - **Pilier :** 13 (À ne pas oublier)
-        - **Convergence :** {', '.join(map(str, sorted(convergence)))}
+        - **Le 23 (Pivot) :** Confirmé par sa sortie au Loto ce lundi soir.
+        - **Le 13 (Moteur) :** Possède le score de forme le plus élevé à l'Euro (15).
+        - **Le 42 (Écart) :** Attendu pour corriger son retard (Écart 16).
+        - **Le 27 (Transfert) :** Sorti ce soir, forte affinité Euro.
         """)
 
+# --- ONGLET 2 : TABLEAUX ---
 with tab2:
-    st.header("🚀 Puissance de Convergence")
-    st.write("Numéros détectés simultanément sur les deux jeux :")
+    st.header("📊 Statistiques de Convergence")
     
-    # Création d'un tableau propre
-    data_conv = []
-    for n in convergence:
-        statut = "⭐ PIVOT" if n in [13, 23] else "✅ VALIDÉ"
-        force = "99%" if n in [13, 23] else "85%"
-        data_conv.append({"Numéro": n, "Statut": statut, "Confiance": force})
+    df_data = []
+    for n in euro_cibles:
+        prio = "HAUTE" if n in [13, 23, 42] else "MOYENNE"
+        obs = "Pivot" if n == 23 else ("Écart 16" if n == 42 else "Forme 15" if n == 13 else "Stable")
+        df_data.append({"Numéro": n, "Priorité": prio, "Observation": obs})
     
-    df_conv = pd.DataFrame(data_conv)
-    st.table(df_conv.sort_values(by="Confiance", ascending=False))
+    df = pd.DataFrame(df_data)
+    st.table(df.sort_values(by="Priorité"))
 
+# --- ONGLET 3 : MIROIR ---
 with tab3:
-    st.header("🔄 Flux Miroir (Loto ↔ Euro)")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.subheader("Sorties Loto Samedi")
-        st.write("Numéros à surveiller pour mardi :")
-        st.code("17, 22, 23, 25, 49")
-    with c2:
-        st.subheader("Historique Euro")
-        st.write("Bases solides pour le prochain Loto :")
-        st.code("44, 42, 13, 10")
+    st.header("🔄 Flux Miroir : Lundi ➔ Mardi")
+    st.write("Analyse des numéros ayant circulé entre les tirages récents :")
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.subheader("Sortis Lundi (Loto)")
+        st.code("6 - 15 - 23 - 27 - 43")
+        st.write("Le 23 et le 27 sont les plus susceptibles de 'sauter' vers l'Euro demain.")
+        
+    with col_b:
+        st.subheader("Attendus Mardi (Euro)")
+        st.code("13 - 44 - 42 - 10")
+        st.write("Ces numéros sont les piliers historiques qui équilibrent le tirage.")
 
-st.divider()
-st.caption("Application Loto-Euro Fusion - Version 2.0 - Mise à jour le 27/04/2026")
+# PIED DE PAGE
+st.markdown("---")
+st.caption(f"Propulsé par ton Algorithme de Fusion - Version 2.1 - Mise à jour {random.randint(1000,9999)}")
