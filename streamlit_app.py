@@ -77,4 +77,51 @@ st.write(f"Analyse Post-Tirage du **01/05/2026** | Statut : Synchronisé")
 derniers_resultats = [1, 3, 9, 11, 42]
 etoiles_sorties = [46, 47]
 
-tab1, tab2
+tab1, tab2 = st.tabs(["🎯 GÉNÉRATEUR DE PRÉDICTIONS", "📊 MATRICE ANALYTIQUE"])
+
+with tab1:
+    c1, c2 = st.columns([2, 1])
+    
+    with c1:
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("🔮 Prédiction Prochain Tirage")
+        st.write("Cible : EuroMillions Mardi 05 Mai")
+        
+        if st.button("LANCER L'ALGORITHME DE RÉSONANCE"):
+            top_numbers = engine_omnibus(derniers_resultats)
+            
+            # Affichage des boules
+            html_res = "".join([f"<div class='ball euro-ball'>{n}</div>" for n in sorted(top_numbers)])
+            st.markdown(html_res, unsafe_allow_html=True)
+            
+            st.write("---")
+            st.write("**Étoiles recommandées par affinité :**")
+            st.markdown("<div class='ball star-ball'>2</div><div class='ball star-ball'>10</div>", unsafe_allow_html=True)
+            st.success("Calcul terminé : Les coefficients d'annonciation ont été appliqués.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with c2:
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("💡 Diagnostic IA")
+        st.info(f"""
+            - **Numéros sortis :** {derniers_resultats}
+            - **Aspiration :** Le numéro 13 et le 32 sont en surtension.
+            - **Annonciation :** Le 42 étant sorti, il appelle ses affinités directes.
+        """)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+with tab2:
+    st.write("### 🧮 Matrice de Calcul Interne")
+    data_view = []
+    for n, s in db_expert.items():
+        data_view.append({
+            "Numéro": n,
+            "Réussite": s[0],
+            "Écart Actuel": s[2],
+            "Max Historique": s[3],
+            "Annoncé Par": s[5]
+        })
+    st.dataframe(pd.DataFrame(data_view).sort_values("Écart Actuel", ascending=False), use_container_width=True)
+
+st.divider()
+st.caption("Moteur IA Omnibus V7.0 - Basé sur l'analyse des affinités historiques et des tensions de rupture.")
