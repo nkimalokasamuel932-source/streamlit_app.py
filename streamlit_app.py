@@ -1,76 +1,80 @@
 import streamlit as st
 import pandas as pd
-import os
+import numpy as np
 from datetime import datetime
 
-# --- CONFIGURATION ---
-st.set_page_config(page_title="IA OMNIBUS V6.1 - Post-Tirage", page_icon="🧬", layout="wide")
+# --- 1. CONFIGURATION ET DESIGN ---
+st.set_page_config(page_title="IA OMNIBUS V7.0 EXPERT", page_icon="🧬", layout="wide")
 
 st.markdown("""
     <style>
-    .main { background: #020617; color: #f8fafc; font-family: 'Urbanist', sans-serif; }
-    .card { background: rgba(30, 41, 59, 0.5); padding: 20px; border-radius: 15px; border: 1px solid #334155; }
+    .main { background: radial-gradient(circle at top, #081221, #020617); color: #f8fafc; font-family: 'Urbanist', sans-serif; }
+    .card { background: rgba(30, 41, 59, 0.5); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
     .ball {
         display: inline-flex; align-items: center; justify-content: center;
-        width: 55px; height: 55px; border-radius: 50%; font-size: 22px;
-        font-weight: bold; margin: 5px; color: #000;
-        box-shadow: inset -3px -3px 10px rgba(0,0,0,0.3);
+        width: 58px; height: 58px; border-radius: 50%; font-size: 24px;
+        font-weight: 800; margin: 8px; color: #000;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset -4px -4px 8px rgba(0,0,0,0.2);
     }
     .euro-ball { background: linear-gradient(135deg, #00f2fe, #4facfe); }
-    .loto-ball { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
-    .status-up { color: #00ffcc; font-weight: bold; }
+    .star-ball { background: linear-gradient(135deg, #ffd700, #b8860b); width: 48px; height: 48px; font-size: 18px; }
+    .status-text { font-size: 14px; color: #94a3b8; margin-top: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- CHARGEMENT ---
-def load_data():
-    if os.path.exists("data_fusion.csv"):
-        return pd.read_csv("data_fusion.csv")
-    return pd.DataFrame()
+# --- 2. BASE DE DONNÉES CONSOLIDÉE (Tes stats de vendredi 1er Mai) ---
+# Format : [Réussite_Tot, Forme_Rec, Ecart_Act, Ecart_Max, Meilleure_Affin, Annonce_Par, Annonciateur_De]
+db_expert = {
+    13: [321, 0, 10, 55, 3, 31, 3],
+    41: [321, 1, 9, 41, 16, 13, 17],
+    22: [314, 3, 2, 50, 23, 6, 26],
+    15: [311, 1, 1, 46, 24, 10, 23],
+    3:  [305, 1, 0, 49, 13, 44, 15],
+    9:  [299, 1, 0, 44, 15, 2, 23],
+    16: [299, 2, 3, 53, 6, 13, 5],
+    31: [299, 1, 0, 67, 36, 37, 13],
+    32: [278, 0, 31, 64, 22, 23, 3],
+    42: [274, 0, 0, 54, 16, 9, 14],
+    11: [274, 0, 0, 65, 7, 19, 1],
+    46: [280, 0, 0, 42, 22, 1, 18],
+    47: [280, 1, 0, 68, 21, 10, 3],
+    1:  [291, 0, 0, 42, 49, 34, 6]
+}
 
-df = load_data()
-
-# --- ALGORITHME V6.1 ---
-def get_predictions(mode="euro"):
-    data = df.copy()
-    if mode == "euro":
-        # Calcul : Masse + (Ecart x 1.5) + Bonus Zone de Silence (14-41)
-        data['score'] = (data['masse_euro'] * 0.2) + (data['ecart_euro'] * 1.5)
-        data.loc[(data['numero'] > 14) & (data['numero'] < 41), 'score'] += 25
-    else:
-        # Calcul Loto : Masse Loto + Ecart Loto
-        data['score'] = (data['masse_loto'] * 0.6) + (data['ecart_loto'] * 0.4)
+# --- 3. MOTEUR DE CALCUL PRÉDICTIF (ALGO V7) ---
+def engine_omnibus(last_draw_results):
+    scores = {}
+    for n, stats in db_expert.items():
+        reussite, forme, ecart, ecart_max, affin, par, annonciateur = stats
+        
+        # A. Score de Tension (Le ressort statistique)
+        score = (reussite * 0.1) + (ecart * 2.0)
+        
+        # B. Bonus de Zone Critique (Ecart > 60% du Max)
+        if ecart > (ecart_max * 0.6):
+            score += 45
+            
+        # C. Logique d'Annonciation (Basée sur le tirage du 1er Mai)
+        for last_num in last_draw_results:
+            if par == last_num: # Si le numéro est "annoncé par" un sortant
+                score += 55
+            if affin == last_num: # Si le numéro a une affinité avec un sortant
+                score += 30
+        
+        # D. Malus de sortie récente (Vase vide)
+        if ecart == 0:
+            score -= 70
+            
+        scores[n] = round(score, 2)
     
-    return data.sort_values('score', ascending=False).head(5)
+    return sorted(scores, key=scores.get, reverse=True)[:5]
 
-# --- INTERFACE ---
-st.title("🧬 IA OMNIBUS V6.1 - Analyse Post-Résultats")
-st.write(f"Derniers numéros sortis : **1 - 3 - 9 - 11 - 42** | Étoiles : **46 - 47**")
+# --- 4. INTERFACE UTILISATEUR ---
+st.title("🧬 IA OMNIBUS V7.0 : Système Expert de Flux")
+st.write(f"Analyse Post-Tirage du **01/05/2026** | Statut : Synchronisé")
 
-if not df.empty:
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("🇪🇺 PRONOSTIC PROCHAIN EURO")
-        if st.button("CALCULER NOUVEAUX FLUX"):
-            preds = get_predictions("euro")
-            balls_html = "".join([f"<div class='ball euro-ball'>{int(n)}</div>" for n in sorted(preds['numero'])])
-            st.markdown(balls_html, unsafe_allow_html=True)
-            st.write("---")
-            st.write("**Analyse :** Transfert d'énergie vers le numéro **32** (Ecart 36) et la zone médiane.")
-        st.markdown("</div>", unsafe_allow_html=True)
+# Résultats du tirage de ce vendredi (1er mai)
+derniers_resultats = [1, 3, 9, 11, 42]
+etoiles_sorties = [46, 47]
 
-    with col2:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("📊 ÉTAT DES TENSIONS (Top 5)")
-        tension_df = df.sort_values('ecart_euro', ascending=False).head(5)
-        for _, row in tension_df.iterrows():
-            st.write(f"Numéro **{int(row['numero'])}** : Écart de {int(row['ecart_euro'])} tirages")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    st.divider()
-    st.write("### 📈 Matrice de Recalcul")
-    st.dataframe(df, use_container_width=True)
-else:
-    st.error("Fichier data_fusion.csv manquant !")
+tab1, tab2
